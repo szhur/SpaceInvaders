@@ -14,11 +14,9 @@ TestWidget::TestWidget(const std::string& name, pugi::xml_node elem)
 
 void TestWidget::Init()
 {
-	_sprite1 = Core::resourceManager.Get<Render::Sprite>("btnStart_Text");
-	_sprite2 = Core::resourceManager.Get<Render::Sprite>("Star");
-	_circle = Core::resourceManager.Get<Render::Sprite>("Circle");
+	_warShip = Core::resourceManager.Get<Render::Sprite>("Warship");
 
-	_curSprite = 0;
+	_scale = 0.2f;
 	_angle = 0;
 
 	_spline.addKey(0.0f, FPoint(100.0f, 100.0f));
@@ -49,35 +47,24 @@ void TestWidget::Draw()
 	Render::device.MatrixTranslate((float)mousePos.x, (float)mousePos.y, 0);
 	Render::device.MatrixRotate(Vector3(0, 0, 1), Angle::FromRadians(_angle));
 
-	if (_curSprite == 0)
-	{
-		//
-		// Метод Sprite::Draw() без параметров отрисовывает изображение в центре координат (0, 0).
-		// Центр координат и положение осей были заданы выше установкой текущего преобразования.
-		//
-		_sprite1->Draw();
-	}
-	else
-	{
-		Render::device.MatrixScale(_scale);
-		Render::device.MatrixTranslate(-_circle->Width() * 0.5f, -_circle->Height() * 0.5f, 0.0f);
+	Render::device.MatrixScale(_scale);
+	Render::device.MatrixTranslate(-_warShip->Width() * 0.5f, -_warShip->Height() * 0.5f, 0.0f);
 		
-		//
-		// При отрисовке спрайта можно задать прямоугольник, в который
-		// он будет отрисован (соответственно отмасштабирован).
-		//
-		FRect rect = _circle->GetRect();
+	//
+	// При отрисовке спрайта можно задать прямоугольник, в который
+	// он будет отрисован (соответственно отмасштабирован).
+	//
+	FRect rect = _warShip->GetRect();
 
-		//
-		// При отрисовке спрайта можно задать часть изображения, которая
-		// будет отрисована, в UV координатах. UV координаты нормализованы,
-		// то есть вне зависимости от размера изображения в текселях,
-		// UV координаты задаются в диапазоне 0..1.
-		//
-		FRect uv(0, 1, 0, 1); // (xStart, xEnd, yStart, yEnd)
+	//
+	// При отрисовке спрайта можно задать часть изображения, которая
+	// будет отрисована, в UV координатах. UV координаты нормализованы,
+	// то есть вне зависимости от размера изображения в текселях,
+	// UV координаты задаются в диапазоне 0..1.
+	//
+	FRect uv(0, 1, 0, 1); // (xStart, xEnd, yStart, yEnd)
 
-		_circle->Draw(rect, uv);
-	}
+	_warShip->Draw(rect, uv);
 
 	//
 	// Воостанавливаем прежнее преобразование координат, сохранённое ранее в стек.
@@ -94,7 +81,7 @@ void TestWidget::Draw()
 	//
 	Render::device.PushMatrix();
 	Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
-	_sprite2->Draw();
+	//_sprite2->Draw();
 	Render::device.PopMatrix();
 
 	//
@@ -137,41 +124,9 @@ void TestWidget::Draw()
 
 void TestWidget::Update(float dt)
 {
-	//
-	// Обновим контейнер с эффектами
-	//
 	_effCont.Update(dt);
 
-	//
-	// dt - значение времени в секундах, прошедшее от предыдущего кадра.
-	// Оно может принимать разные значения, в зависимости от производительности системы
-	// и сложности сцены.
-	//
-	// Для того, чтобы наша анимация зависела только от времени, и не зависела от
-	// производительности системы, мы должны рассчитывать её от этого значения.
-	//
-	// Увеличиваем наш таймер с удвоенной скоростью.
-	//
 	_timer += dt * 2;
-	
-	//
-	// Зацикливаем таймер в диапазоне (0, 2п).
-	// Это нужно делать для предотвращения получения некорректных значений,
-	// если вдруг переполнится разрядная сетка (float переполнился) или задержка
-	// от предыдущего кадра была слишкой большой (система тормози-и-ит).
-	//
-	// Диапазон значений выбран равным (0, 2п), потому что мы используем это значение
-	// для расчёта синуса, и большие значения будут просто периодически повторять результат.
-	//
-	while (_timer > 2 * Math::PI)
-	{
-		_timer -= 2 * Math::PI;
-	}
-	
-	//
-	// Анимирование параметра масштабирования в зависимости от таймера.
-	//
-	_scale = 0.8f + 0.25f * sinf(_timer);
 }
 
 bool TestWidget::MouseDown(const IPoint &mousePos)
@@ -204,11 +159,6 @@ bool TestWidget::MouseDown(const IPoint &mousePos)
 		eff->posX = mousePos.x + 0.f;
 		eff->posY = mousePos.y + 0.f;
 		eff->Reset();
-
-		//
-		// Изменяем значение с 0 на 1 и наоборот.
-		//
-		_curSprite = 1 - _curSprite;
 	}
 	return false;
 }
@@ -222,54 +172,6 @@ bool TestWidget::MouseMove(const IPoint &mousePos)
 		//
 		_eff->posX = mousePos.x + 0.f;
 		_eff->posY = mousePos.y + 0.f;
-	}
-	return true;
-}
-
-bool TestWidget::MouseUp(const IPoint &/*mousePos*/)
-{
-	if (_eff)
-	{
-		//
-		// Если эффект создан, то при отпускании мыши завершаем его.
-		//
-		_eff->Finish();
-		_eff = nullptr;
-	}
-	return true;
-}
-
-void TestWidget::AcceptMessage(const Message& /*message*/)
-{
-	//
-	// Виджету могут посылаться сообщения с параметрами.
-	//
-
-	/*const std::string& publisher = message.getPublisher();
-	const std::string& data = message.getData();*/
-}
-
-bool TestWidget::KeyPressed(int keyCode)
-{
-	//
-	// keyCode - виртуальный код клавиши.
-	// В качестве значений для проверки нужно использовать константы VK_.
-	//
-
-	if (keyCode == VK_A) {
-		// Реакция на нажатие кнопки A
-	}
-	return true;
-}
-
-bool TestWidget::CharPressed(int unicodeChar)
-{
-	//
-	// unicodeChar - Unicode код введённого символа
-	//
-
-	if (unicodeChar == L'а') {
-		// Реакция на ввод символа 'а'
 	}
 	return true;
 }
