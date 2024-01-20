@@ -12,19 +12,21 @@ MainWidget::MainWidget(const std::string& name, pugi::xml_node elem)
 	Init();
 }
 
+bool compareFloat(float lhs, float rhs, float epsilon = 0.001f)
+{
+	if (lhs + epsilon > rhs && lhs - epsilon < rhs)
+		return true;
+
+	return false;
+}
+
 void MainWidget::Init()
 {
 	_warShip = Core::resourceManager.Get<Render::Sprite>("Warship");
+	_fire = Core::resourceManager.Get<Render::Sprite>("Fire");
 
 	_scale = 0.2f;
 	_angle = 0;
-
-	_spline.addKey(0.0f, FPoint(100.0f, 100.0f));
-	_spline.addKey(0.25f, FPoint(150.0f, 300.0f));
-	_spline.addKey(0.5f, FPoint(500.0f, 300.0f));
-	_spline.addKey(0.75f, FPoint(630.0f, 450.0f));
-	_spline.addKey(1.0f, FPoint(600.0f, 550.0f));
-	_spline.CalculateGradient();
 }
 
 void MainWidget::Draw()
@@ -47,54 +49,40 @@ void MainWidget::Draw()
 
 	Render::device.PopMatrix();
 
-	FPoint currentPosition = _spline.getGlobalFrame(std::clamp(_timer / 6.0f, 0.0f, 1.0f));
+	for (auto const & shot : _shotVec)
+	{
+		FPoint currentPosition = shot.GetCurrentPosition();
 
-	Render::device.PushMatrix();
-	Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
-	//_sprite2->Draw();
-	Render::device.PopMatrix();
+		Render::device.PushMatrix();
+		Render::device.MatrixScale(_scale);
+		Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
+		_fire->Draw();
+		Render::device.PopMatrix();
+	}
 }
 
 void MainWidget::Update(float dt)
 {
-	_effCont.Update(dt);
+	for (auto & shot : _shotVec)
+	{
+		if (!shot.IsValid())
+		{
+			_shotVec.erase(_shotVec.begin());
 
-	_timer += dt * 2;
+			continue;
+		}
+
+		shot.Update(dt);
+	}
 }
 
 bool MainWidget::MouseDown(const IPoint &mousePos)
 {
-	if (Core::mainInput.GetMouseRightButton())
-	{
-		_eff = _effCont.AddEffect("Iskra");
-		_eff->posX = mousePos.x + 0.f;
-		_eff->posY = mousePos.y + 0.f;
-		_eff->Reset();
-		
-		_angle += 25;
-		while (_angle > 360)
-		{
-			_angle -= 360;
-		}
-	}
-	else
-	{
-		ParticleEffectPtr eff = _effCont.AddEffect("FindItem2");
-		eff->posX = mousePos.x + 0.f;
-		eff->posY = mousePos.y + 0.f;
-		eff->Reset();
-	}
-	return false;
-}
+	auto mouseX = Core::mainInput.GetMousePos().x / _scale;
 
-bool MainWidget::MouseMove(const IPoint &mousePos)
-{
-	if (_eff)
-	{
-		_eff->posX = mousePos.x + 0.f;
-		_eff->posY = mousePos.y + 0.f;
-	}
-	return true;
+	_shotVec.push_back(MovableObject(mouseX)); // TODO: Probably reconsider this logic
+
+	return false;
 }
 
 } // namespace SpaceInvaders

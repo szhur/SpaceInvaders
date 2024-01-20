@@ -59,7 +59,7 @@ void MainDelegate::LoadResources()
 
 	Core::guiManager.LoadLayers("Layers.xml");
 
-	Core::mainScreen.pushLayer("TestLayer");
+	Core::mainScreen.pushLayer("SILayer");
 }
 
 void MainDelegate::OnResourceLoaded() {
