@@ -1,6 +1,6 @@
 // ◦ Playrix ◦
 #include "stdafx.h"
-#include "TestAppDelegate.h"
+#include "MainDelegate.h"
 #include <Core/Main/CommandLineArguments.h>
 #include <Debug/CrashReport.h>
 #include <Core/Main/Main.h>
@@ -58,7 +58,7 @@ int Core::Main(const CommandLineArguments& commandLineArguments) {
 	Log::Instance().AddSink(MakeIntrusiveAtomic<HtmlFileLogSink>("log.htm", true));
 	Log::Instance().AddSink(MakeIntrusiveAtomic<RotatingTextFileLogSink>(10 * 1024, "log.rotating.txt", false));
 
-	Core::RunApplicationMainLoop(commandLineArguments, new Example::TestAppDelegate());
+	Core::RunApplicationMainLoop(commandLineArguments, new SpaceInvaders::MainDelegate());
 
 	return 0;
 }

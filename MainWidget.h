@@ -3,14 +3,14 @@
 
 #include <PlayrixEngine.h>
 
-namespace Example {
+namespace SpaceInvaders {
 
 using namespace Core;
 
-class TestWidget : public GUI::Widget
+class MainWidget : public GUI::Widget
 {
 public:
-	TestWidget(const std::string& name, pugi::xml_node elem);
+	MainWidget(const std::string& name, pugi::xml_node elem);
 
 	void Draw() override;
 	void Update(float dt) override;
@@ -35,4 +35,4 @@ private:
 	TimedSpline<FPoint> _spline;
 };
 
-} // namespace Example
+} // namespace SpaceInvaders
