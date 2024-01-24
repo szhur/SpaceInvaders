@@ -10,15 +10,28 @@ using namespace Core;
 class MovableObject
 {
 public:
-    MovableObject(float x);
+    MovableObject(
+            std::function<void(TimedSpline<FPoint>&)> func
+        ,   Render::SpritePtr sprite
+        ,   float time
+    );
 
     void Update(float dt);
 
     FPoint GetCurrentPosition() const;
 
-    bool IsValid() const;
+    Render::SpritePtr GetSprite() const;
+
+    virtual bool IsValid() const;
+
+    void Invalidate();
+
+protected:
+    float _timer = 0.0f;
+    float _lifeTime;
+
 private:
-    float _timer = 1.0f;
+    Render::SpritePtr _sprite = nullptr;
 
     TimedSpline<FPoint> _spline;
 };

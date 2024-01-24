@@ -1,5 +1,6 @@
 // ◦ Playrix ◦
 #include "stdafx.h"
+#include "Common.h"
 #include "MainDelegate.h"
 #include "MainWidget.h"
 
@@ -21,11 +22,6 @@ namespace Core::Debug {
 namespace SpaceInvaders {
 
 using namespace Core;
-
-enum {
-	windowWidth = 1024,
-	windowHeight = 768
-};
 
 MainDelegate::MainDelegate()
 {

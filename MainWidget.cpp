@@ -1,6 +1,7 @@
 // ◦ Playrix ◦
 #include "stdafx.h"
 #include "MainWidget.h"
+#include "Common.h"
 
 namespace SpaceInvaders {
 
@@ -12,21 +13,25 @@ MainWidget::MainWidget(const std::string& name, pugi::xml_node elem)
 	Init();
 }
 
-bool compareFloat(float lhs, float rhs, float epsilon = 0.001f)
+bool MainWidget::CheckContact(
+		const FPoint& shotPos
+	, 	const FPoint& enemyPos
+	,	float epsilon
+)
 {
-	if (lhs + epsilon > rhs && lhs - epsilon < rhs)
-		return true;
+	bool contactX = shotPos.x + epsilon > enemyPos.x && shotPos.x - epsilon < enemyPos.x;
 
-	return false;
+	bool contactY = shotPos.y + epsilon > enemyPos.y && shotPos.y - epsilon < enemyPos.y;
+
+	return contactX && contactY;
 }
 
 void MainWidget::Init()
 {
 	_warShip = Core::resourceManager.Get<Render::Sprite>("Warship");
 	_fire = Core::resourceManager.Get<Render::Sprite>("Fire");
-
-	_scale = 0.2f;
-	_angle = 0;
+	_star = Core::resourceManager.Get<Render::Sprite>("Star");
+	_meteor = Core::resourceManager.Get<Render::Sprite>("Meteor");
 }
 
 void MainWidget::Draw()
@@ -36,8 +41,6 @@ void MainWidget::Draw()
 	Render::device.PushMatrix();
 	
 	Render::device.MatrixTranslate((float)mousePos.x, 50.0f, 0);
-	Render::device.MatrixRotate(Vector3(0, 0, 1), Angle::FromRadians(_angle));
-
 	Render::device.MatrixScale(_scale);
 	Render::device.MatrixTranslate(-_warShip->Width() * 0.5f, -_warShip->Height() * 0.5f, 0.0f);
 		
@@ -49,6 +52,7 @@ void MainWidget::Draw()
 
 	Render::device.PopMatrix();
 
+	// TODO: Move loop content to separate function, remove duplications
 	for (auto const & shot : _shotVec)
 	{
 		FPoint currentPosition = shot.GetCurrentPosition();
@@ -56,7 +60,18 @@ void MainWidget::Draw()
 		Render::device.PushMatrix();
 		Render::device.MatrixScale(_scale);
 		Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
-		_fire->Draw();
+		shot.GetSprite()->Draw();
+		Render::device.PopMatrix();
+	}
+
+	for (auto const & enemy : _enemyVec)
+	{
+		FPoint currentPosition = enemy.GetCurrentPosition();
+
+		Render::device.PushMatrix();
+		Render::device.MatrixScale(_scale);
+		Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
+		enemy.GetSprite()->Draw();
 		Render::device.PopMatrix();
 	}
 }
@@ -65,14 +80,71 @@ void MainWidget::Update(float dt)
 {
 	for (auto & shot : _shotVec)
 	{
+		for (auto & enemy : _enemyVec)
+		{
+			if (CheckContact(shot.GetCurrentPosition(), enemy.GetCurrentPosition()))
+			{
+				enemy.Damage();
+
+				shot.Invalidate();
+			}
+		}
+	}
+
+	// TODO: Maybe move deletion to upper loop
+	for (size_t i = 0; i < _shotVec.size(); ++i)
+	{
+		auto & shot = _shotVec[i];
+
 		if (!shot.IsValid())
 		{
-			_shotVec.erase(_shotVec.begin());
+			_shotVec.erase(_shotVec.begin() + i);
+
+			--i;
 
 			continue;
 		}
 
 		shot.Update(dt);
+	}
+
+	for (size_t i = 0; i < _enemyVec.size(); ++i)
+	{
+		auto & enemy = _enemyVec[i];
+
+		if (!enemy.IsValid())
+		{
+			_enemyVec.erase(_enemyVec.begin() + i);
+
+			--i;
+
+			continue;
+		}
+
+		enemy.Update(dt);
+	}
+
+	int choice = rand() % 200;
+	if (choice <= 1)
+	{
+		float startX = static_cast<float>(rand() % static_cast<int>(1024 / _scale));
+		float maxY = windowHeight / _scale;
+
+		_enemyVec.push_back(
+			Enemy(
+					[&startX, &maxY](TimedSpline<FPoint>& spline){
+						spline.addKey(0.0f, FPoint(startX, 4000.0f));
+						spline.addKey(5.0f, FPoint(startX, 3000.0f));
+						spline.addKey(10.0f, FPoint(startX, 2000.0f));
+						spline.addKey(15.0f, FPoint(startX, 1000.0f));
+						spline.addKey(20.0f, FPoint(startX, 0.0f));
+						spline.CalculateGradient();
+					}
+				,	_star
+				,	20.0f
+				,	3
+			)
+		);
 	}
 }
 
@@ -80,7 +152,18 @@ bool MainWidget::MouseDown(const IPoint &mousePos)
 {
 	auto mouseX = Core::mainInput.GetMousePos().x / _scale;
 
-	_shotVec.push_back(MovableObject(mouseX)); // TODO: Probably reconsider this logic
+	_shotVec.push_back(
+		MovableObject(
+				[&mouseX](TimedSpline<FPoint>& spline){
+					spline.addKey(0.0f, FPoint(mouseX, 400.0f));
+					spline.addKey(0.5f, FPoint(mouseX, 2200.0f));
+					spline.addKey(1.0f, FPoint(mouseX, 4000.0f));
+					spline.CalculateGradient();
+				}
+			,	_fire
+			,	1.0f
+		)
+	); 
 
 	return false;
 }

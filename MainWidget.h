@@ -3,7 +3,7 @@
 
 #include <PlayrixEngine.h>
 
-#include "MovableObject.h"
+#include "Enemy.h"
 
 namespace SpaceInvaders {
 
@@ -22,14 +22,23 @@ public:
 private:
 	void Init();
 
+	bool CheckContact(
+			const FPoint& shot
+		, 	const FPoint& enemy
+		, 	float epsilon = 100.0f
+	);
+
 private:
-	float _scale = 0.0f;
-	float _angle = 0.0f;
+	float _scale = 0.2f;
 	
 	Render::SpritePtr _warShip = nullptr;
 	Render::SpritePtr _fire = nullptr;
+	Render::SpritePtr _star = nullptr;
+	Render::SpritePtr _meteor = nullptr;
 
 	std::vector<MovableObject> _shotVec;
+
+	std::vector<Enemy> _enemyVec;
 };
 
 } // namespace SpaceInvaders

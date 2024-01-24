@@ -6,19 +6,20 @@ namespace SpaceInvaders {
 
 using namespace Core;
 
-MovableObject::MovableObject(float x) 
+MovableObject::MovableObject(
+        std::function<void(TimedSpline<FPoint>&)> func
+    ,   Render::SpritePtr sprite
+    ,   float time
+)
+    : _sprite(sprite)
+    , _lifeTime(time)
 {
-    _timer = 0.0f;
-
-	_spline.addKey(0.0f, FPoint(x, 400.0f));
-	_spline.addKey(0.5f, FPoint(x, 2200.0f));
-	_spline.addKey(1.0f, FPoint(x, 4000.0f));
-	_spline.CalculateGradient();
+    func(_spline);
 }
 
 FPoint MovableObject::GetCurrentPosition() const
 {
-    return _spline.getGlobalFrame(std::clamp(_timer, 0.0f, 1.0f));
+    return _spline.getGlobalFrame(std::clamp(_timer, 0.0f, _lifeTime));
 }
 
 void MovableObject::Update(float dt)
@@ -26,9 +27,19 @@ void MovableObject::Update(float dt)
     _timer += dt;
 }
 
+Render::SpritePtr MovableObject::GetSprite() const
+{
+    return _sprite;
+}
+
 bool MovableObject::IsValid() const
 {
-    return _timer < 1.0f;
+    return _timer < _lifeTime;
+}
+
+void MovableObject::Invalidate()
+{
+    _timer = _lifeTime;
 }
 
 } // namespace SpaceInvaders
