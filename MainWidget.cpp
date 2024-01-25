@@ -32,6 +32,8 @@ void MainWidget::Init()
 	_fire = Core::resourceManager.Get<Render::Sprite>("Fire");
 	_star = Core::resourceManager.Get<Render::Sprite>("Star");
 	_meteor = Core::resourceManager.Get<Render::Sprite>("Meteor");
+
+	_restart = Core::resourceManager.Get<Render::Sprite>("Restart");
 }
 
 void MainWidget::Draw()
@@ -78,6 +80,17 @@ void MainWidget::Draw()
 
 void MainWidget::Update(float dt)
 {
+	_timer += dt;
+
+	if (_timer >= _maxTime)
+	{
+		_enemyVec.clear();
+		_shotVec.clear();
+
+		Core::mainScreen.popLayer();
+		Core::mainScreen.pushLayer("RestartLayer");
+	}
+
 	for (auto & shot : _shotVec)
 	{
 		for (auto & enemy : _enemyVec)
@@ -125,7 +138,26 @@ void MainWidget::Update(float dt)
 	}
 
 	int choice = rand() % 200;
-	if (choice <= 1)
+	if (choice == 0)
+	{
+		float maxX = static_cast<float>(windowWidth / _scale) / 2;
+		float maxY = windowHeight / _scale;
+
+		_enemyVec.push_back(
+			Enemy(
+					[&maxX, &maxY](TimedSpline<FPoint>& spline){
+						for (float t = 0.0f; t <= 20.0f; t += 1.0f)
+							spline.addKey(t, FPoint((std::sin(t)+1)*maxX, maxY - maxY*(t/20.0f)));
+
+						spline.CalculateGradient();
+					}
+				,	_meteor
+				,	20.0f
+				,	3
+			)
+		);
+	}
+	else if (choice == 1)
 	{
 		float startX = static_cast<float>(rand() % static_cast<int>(1024 / _scale));
 		float maxY = windowHeight / _scale;
@@ -133,11 +165,9 @@ void MainWidget::Update(float dt)
 		_enemyVec.push_back(
 			Enemy(
 					[&startX, &maxY](TimedSpline<FPoint>& spline){
-						spline.addKey(0.0f, FPoint(startX, 4000.0f));
-						spline.addKey(5.0f, FPoint(startX, 3000.0f));
-						spline.addKey(10.0f, FPoint(startX, 2000.0f));
-						spline.addKey(15.0f, FPoint(startX, 1000.0f));
-						spline.addKey(20.0f, FPoint(startX, 0.0f));
+						for (float t = 0.0f; t <= 20.0f; t += 1.0f)
+							spline.addKey(t, FPoint(startX, maxY - maxY*(t/20.0f)));
+
 						spline.CalculateGradient();
 					}
 				,	_star

@@ -8,7 +8,7 @@ namespace Core
 {
 
 std::string_view ApplicationBase::GetName() {
-	return "PlrExampleApp";
+	return "SpaceInvaders";
 }
 
 }

@@ -8,7 +8,7 @@ namespace Core
 {
 
 std::string_view Application::GetWindowName() {
-	return "PlrExampleApp";
+	return "SpaceInvaders";
 }
 
 }

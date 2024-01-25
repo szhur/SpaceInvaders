@@ -52,7 +52,6 @@ void MainDelegate::LoadResources()
 	ParticleEffectLoader::LoadEffects("Example2_Flames.xml", "TestGroup", true);
 	ParticleEffectLoader::LoadEffects("Example3_FindObject.xml", "TestGroup", true);
 
-
 	Core::guiManager.LoadLayers("Layers.xml");
 
 	Core::mainScreen.pushLayer("SILayer");
