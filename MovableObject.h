@@ -11,7 +11,7 @@ class MovableObject
 {
 public:
     MovableObject(
-            std::function<void(TimedSpline<FPoint>&)> func
+            std::function<FPoint(float)> func
         ,   Render::SpritePtr sprite
         ,   float time
     );
@@ -26,14 +26,14 @@ public:
 
     void Invalidate();
 
-protected:
-    float _timer = 0.0f;
-    float _lifeTime;
-
 private:
     Render::SpritePtr _sprite = nullptr;
 
-    TimedSpline<FPoint> _spline;
+    std::function<FPoint(float)> _func;
+
+protected:
+    float _timer = 0.0f;
+    float _lifeTime;
 };
 
 } // namespace SpaceInvaders

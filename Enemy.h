@@ -13,7 +13,7 @@ class Enemy : public MovableObject
 {
 public:
     Enemy(
-            std::function<void(TimedSpline<FPoint>&)> func
+            std::function<FPoint(float)> func
         ,   Render::SpritePtr sprite
         ,   float time
         ,   int health

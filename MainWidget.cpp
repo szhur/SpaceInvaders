@@ -84,11 +84,11 @@ void MainWidget::Update(float dt)
 
 	if (_timer >= _maxTime)
 	{
-		_enemyVec.clear();
+		/*_enemyVec.clear();
 		_shotVec.clear();
 
 		Core::mainScreen.popLayer();
-		Core::mainScreen.pushLayer("RestartLayer");
+		Core::mainScreen.pushLayer("RestartLayer");*/
 	}
 
 	for (auto & shot : _shotVec)
@@ -145,11 +145,8 @@ void MainWidget::Update(float dt)
 
 		_enemyVec.push_back(
 			Enemy(
-					[&maxX, &maxY](TimedSpline<FPoint>& spline){
-						for (float t = 0.0f; t <= 20.0f; t += 1.0f)
-							spline.addKey(t, FPoint((std::sin(t)+1)*maxX, maxY - maxY*(t/20.0f)));
-
-						spline.CalculateGradient();
+					[maxX, maxY](float dt){
+							return FPoint((std::sin(dt)+1)*maxX, maxY - maxY*(dt/20.0f));
 					}
 				,	_meteor
 				,	20.0f
@@ -164,11 +161,8 @@ void MainWidget::Update(float dt)
 
 		_enemyVec.push_back(
 			Enemy(
-					[&startX, &maxY](TimedSpline<FPoint>& spline){
-						for (float t = 0.0f; t <= 20.0f; t += 1.0f)
-							spline.addKey(t, FPoint(startX, maxY - maxY*(t/20.0f)));
-
-						spline.CalculateGradient();
+					[startX, maxY](float dt){
+						return FPoint(startX, maxY - maxY*(dt/20.0f));
 					}
 				,	_star
 				,	20.0f
@@ -181,14 +175,12 @@ void MainWidget::Update(float dt)
 bool MainWidget::MouseDown(const IPoint &mousePos)
 {
 	auto mouseX = Core::mainInput.GetMousePos().x / _scale;
+	float maxY = windowHeight / _scale;
 
 	_shotVec.push_back(
 		MovableObject(
-				[&mouseX](TimedSpline<FPoint>& spline){
-					spline.addKey(0.0f, FPoint(mouseX, 400.0f));
-					spline.addKey(0.5f, FPoint(mouseX, 2200.0f));
-					spline.addKey(1.0f, FPoint(mouseX, 4000.0f));
-					spline.CalculateGradient();
+				[mouseX, maxY](float dt){
+					return FPoint(mouseX, maxY*dt);
 				}
 			,	_fire
 			,	1.0f

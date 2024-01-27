@@ -1,8 +1,11 @@
 // ◦ Playrix ◦
 #include "stdafx.h"
+
 #include "Common.h"
 #include "MainDelegate.h"
+
 #include "MainWidget.h"
+#include "RestartWidget.h"
 
 namespace Core::Debug {
 	template<typename T>
@@ -41,6 +44,7 @@ void MainDelegate::ScreenMode(DeviceMode &mode)
 void MainDelegate::RegisterTypes()
 {
 	REGISTER_WIDGET_XML(MainWidget, "MainWidget");
+	REGISTER_WIDGET_XML(RestartWidget, "RestartWidget");
 }
 
 void MainDelegate::LoadResources()

@@ -7,19 +7,18 @@ namespace SpaceInvaders {
 using namespace Core;
 
 MovableObject::MovableObject(
-        std::function<void(TimedSpline<FPoint>&)> func
+        std::function<FPoint(float)> func
     ,   Render::SpritePtr sprite
     ,   float time
 )
     : _sprite(sprite)
+    , _func(func)
     , _lifeTime(time)
-{
-    func(_spline);
-}
+{}
 
 FPoint MovableObject::GetCurrentPosition() const
 {
-    return _spline.getGlobalFrame(std::clamp(_timer, 0.0f, _lifeTime));
+    return _func(_timer);
 }
 
 void MovableObject::Update(float dt)
